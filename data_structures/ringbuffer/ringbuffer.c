@@ -1,20 +1,26 @@
 /**
- * Speedster3030, 2025
+ * Speedster3030;   13 Sept,2025
  * Ring Buffer/Circular Queue structure implementation.
  */
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "ringbuffer.h"
+
+#define RB_OK 0
+#define RB_FULL -1
+#define RB_EMPTY -2
 
 //ring Buffer/Circular Queue struct
-typedef struct
+struct ringBuffer
 {
         int* arr;
         int count;
         int head;
         int tail;
         int max;
-}ringBuffer;
+};
+
 
 //Initialize a new ring buffer
 ringBuffer* new_ringBuffer(int size)
@@ -24,11 +30,12 @@ ringBuffer* new_ringBuffer(int size)
         rb->max=size;
         rb->arr=malloc(size*sizeof(int));
         rb->count=0;
-        rb->head=size-1;
-        rb->tail=size-1;
+        rb->head=0;
+        rb->tail=-1;
 
         return rb;
 }
+
 
 //free the structure from memory
 void delete_Buffer(ringBuffer **rb)
@@ -38,66 +45,76 @@ void delete_Buffer(ringBuffer **rb)
         *rb=NULL;
 }
 
+
 //Put a value in the buffer
 int enqueue(ringBuffer *rb,int n)
 {
         if(rb->count==rb->max)
         {
-                return -1;
+                return RB_FULL;
         }
 
+        rb->tail=(rb->tail+1) % rb->max;
         rb->arr[rb->tail]=n;
-        rb->tail--;
-        if(rb->tail==-1)
-        {
-                rb->tail=rb->max-1;
-        }
         rb->count++;
-        return 0;
+        return RB_OK;
 }
+
 
 //remove a value from the buffer
 int dequeue(ringBuffer *rb,int *result)
 {
         if(rb->count==0)
         {
-                return -1;
+                return RB_EMPTY;
         }
 
-        int t=rb->arr[rb->head];
+        *result=rb->arr[rb->head];
         rb->arr[rb->head]=0;
-        rb->head--;
+        rb->head=(rb->head+1) % rb->max;
         rb->count--;
-        if(rb->head==-1)
-        {
-                rb->head=rb->max-1;
-        }
 
-        *result=t;
-        return 0;
+        return RB_OK;
 }
+
 
 //get the value in front of the queue
 int front(ringBuffer *rb,int *result)
 {
         if(rb->count==0)
         {
-                return -1;
+                return RB_EMPTY;
         }
 
         *result=rb->arr[rb->head];
-        return 0;
+        return RB_OK;
 }
+
+
+//get the rear value of the queue
+int rear(ringBuffer *rb,int *result)
+{
+        if(rb->count==0)
+        {
+                return RB_EMPTY;
+        }
+
+        *result=rb->arr[rb->tail];
+        return RB_OK;
+}
+
 
 int isEmpty(ringBuffer *rb)
 {
         return rb->count==0?1:0;
 }
 
+
 int size(ringBuffer *rb)
 {
         return rb->count;
 }
+
 
 //basic display for the queue
 void display(ringBuffer *rb)
@@ -115,15 +132,9 @@ void display(ringBuffer *rb)
         while(count>0)
         {
                 printf("%d, ",rb->arr[c]);
-                c--;
-                if(c<0)
-                {
-                        c=rb->max-1;
-                }
+                c=(c+1)%rb->max;
                 count--;
         }
 
-        printf("\n");
+        printf("\n\n");
 }
-
-
